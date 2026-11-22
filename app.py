@@ -212,6 +212,26 @@ def crest_css() -> str:
     )
 
 
+def intro_css() -> str:
+    """A short opening animation: the crest pops in, then fades into the watermark."""
+    data = logo_data()
+    if not data:
+        return ""
+    return (
+        ".intro { position: fixed; inset: 0; z-index: 999999; background: #FFFAF5; pointer-events: none;"
+        " animation: introFade 4s ease-in-out forwards; }"
+        " .intro .big { position: fixed; top: 50%; left: 50%; width: min(60vh, 440px); aspect-ratio: 260 / 332;"
+        " transform: translate(-50%, -50%); background: url(data:image/png;base64," + data + ") no-repeat center / contain;"
+        " animation: introPop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }"
+        " @media (min-width: 992px) { .intro .big { left: calc(50% + 150px); } }"
+        " @keyframes introPop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }"
+        " to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }"
+        " @keyframes introFade { 0%, 45% { opacity: 1; visibility: visible; } 99% { opacity: 0; visibility: visible; }"
+        " 100% { opacity: 0; visibility: hidden; } }"
+        " @media (prefers-reduced-motion: reduce) { .intro { display: none; } }"
+    )
+
+
 # ---------- Logs ----------
 def append_row(path: Path, header, row) -> None:
     new_file = not path.exists()
@@ -373,6 +393,13 @@ section[data-testid="stSidebar"] div[class*="st-key-topic_"] button { justify-co
 </style>
 """, unsafe_allow_html=True)
 st.markdown("<style>" + watermark_css() + crest_css() + "</style>", unsafe_allow_html=True)
+
+# opening animation: plays once per visit, not on every click
+if "intro_shown" not in st.session_state:
+    st.session_state.intro_shown = True
+    if logo_data():
+        st.markdown('<style>' + intro_css() + '</style><div class="intro"><div class="big"></div></div>',
+                    unsafe_allow_html=True)
 
 entries = load_entries()
 client = genai.Client(
